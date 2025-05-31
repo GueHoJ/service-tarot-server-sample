@@ -121,8 +121,6 @@ services:
 
 ### Settings > Project: your-server > Python Interpreter > Add Interpreter
 
-> <img width="1006" alt="스크린샷 2024-08-23 오후 9 31 05" src="https://github.com/user-attachments/assets/80a3cb55-c8f1-4bf4-8496-42cba68a3d79">
-
 ## 4. change port for server
 
 ### docker-compose.yml, nginx and DRF configurations
@@ -162,7 +160,7 @@ services:
       # - "443:443" HTTPS 문제는 도메인 단에서 처리
       - "8101":"80" # 쉽게 관리하기 위해서 DRF 포트에 100 더한 값으로 정의, lsof -i :8101 명령어로 포트 사용 중인지 확인 가능
 ~~~
-![docker-compose.yml](https://github.com/user-attachments/assets/5945212a-ef4b-4d28-a484-bf4366231ab3)
+
 
 
 #### ./nginx/conf.d/default.conf
@@ -175,13 +173,12 @@ upstream django_rest_framework_auth_server {
      server django_rest_framework_auth_server:8000;
 }
 ~~~
-![default.conf](https://github.com/user-attachments/assets/40c1ccd2-73a5-4335-986c-255690e8b1b6)
+
 
 ## 5. add url to csrf_trusted_origins of vault 
 
 ### secret > django-rest-framework > dev > settings > create new version
 
-<img width="1472" alt="vault csrf tructed origins" src="https://github.com/user-attachments/assets/4b1e48e2-c3bd-4aa1-b519-0e380af9a8f8">
 
 ## 6. configure nginx subdomain
 
