@@ -1,0 +1,118 @@
+# Upstream definition for Django REST Framework
+upstream django_rest_framework {
+    server django_rest_framework_service_taro_server:8000;
+}
+
+# HTTP to HTTPS redirection
+server {
+    listen 80;
+    server_name localhost;
+
+    # Proxy pass for Django
+    location / {
+        proxy_pass http://django_rest_framework;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Static files
+    location /static/ {
+        alias /etc/nginx/html/static/;
+    }
+
+    # Media files
+    location /media/ {
+        # CORS headers
+        add_header Access-Control-Allow-Origin *;
+        add_header Access-Control-Allow-Methods "GET, POST, OPTIONS";
+        add_header Access-Control-Allow-Headers "Authorization, Content-Type";
+        add_header Access-Control-Expose-Headers "Content-Disposition";
+
+        # Handle preflight requests
+        if ($request_method = OPTIONS) {
+            add_header Content-Length 0;
+            add_header Content-Type text/plain;
+            return 204;
+        }
+
+        alias /etc/nginx/html/media/;
+
+        # Serve files for GET and POST requests
+        try_files $uri $uri/ =404;
+
+
+    }
+
+
+    # Cache static files
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+    }
+}
+
+# HTTPS server configuration
+server {
+    listen 443 ssl;
+    server_name localhost;
+
+    # SSL certificate and key
+    ssl_certificate /etc/nginx/certs/star_conai_ai.crt;
+    ssl_certificate_key /etc/nginx/certs/conai_ai_private.key;
+    ssl_trusted_certificate /etc/nginx/certs/My_CA_Bundle.ca-bundle;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # WebSocket proxy for /ws/
+    location /ws/ {
+        proxy_pass http://django_rest_framework;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+    }
+
+    # Proxy pass for Django
+    location / {
+        proxy_pass http://django_rest_framework;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Static files
+    location /static/ {
+        alias /etc/nginx/html/static/;
+    }
+
+    # Media files
+    location /media/ {
+        # CORS headers
+        add_header Access-Control-Allow-Origin *;
+        add_header Access-Control-Allow-Methods "GET, POST, OPTIONS";
+        add_header Access-Control-Allow-Headers "Authorization, Content-Type";
+        add_header Access-Control-Expose-Headers "Content-Disposition";
+
+        # Handle preflight requests
+        if ($request_method = OPTIONS) {
+            add_header Content-Length 0;
+            add_header Content-Type text/plain;
+            return 204;
+        }
+
+        # Serve files for GET and POST requests
+        try_files $uri $uri/ =404;
+
+        alias /etc/nginx/html/media/;
+    }
+
+    # Cache static files
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+    }
+}

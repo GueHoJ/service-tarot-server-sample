@@ -1,0 +1,95 @@
+services:
+  django_rest_framework_service_taro_server:
+    build:
+      context: ./django_rest_framework
+    container_name: django_rest_framework_service_taro_server
+    shm_size: '2gb'  # Increase the /dev/shm size to 2 GB
+    command: >
+      bash -c "/django_rest_framework/start.sh"
+#      bash -c "
+#      source /venv/bin/activate
+#      && exec bash
+#      && python manage.py collectstatic --noinput
+#      && python manage.py makemigrations
+#      && python manage.py migrate --database default
+#      && python manage.py makesuperuser
+#      && gunicorn project.wsgi:application --bind 0.0.0.0:8000 --timeout 300 --workers 12 --threads 8
+#      & celery -A project worker --loglevel=info
+#      & celery -A project beat --loglevel=info
+#      & celery -A project flower --loglevel=info"
+    volumes:
+      - ./django_rest_framework:/django_rest_framework
+      - media_volume:/django_rest_framework/.media_root
+    working_dir: /django_rest_framework
+    env_file:
+      - .env.dev
+    ports:
+      # 외부 포트: 내부 포트
+      - "8005:8000"
+    logging:
+      driver: "json-file" # use json-file logging driver or other logging driver
+      options:
+        max-size: "100m" # Set the maximum log file size
+        max-file: "100" # Set the maximum number of log files, keep 100 log files, once the number of log files exceeds 100, the oldest log file will be deleted
+    networks:
+      - backend
+      - vault-network
+
+  nginx_service_taro_server:
+    build:
+      context: ./nginx  # Path to the directory containing the Dockerfile
+    container_name: nginx_service_taro_server
+    ports:
+      # 외부 포트: 내부 포트
+      - "8105:80"
+      - "8443:443"  # Expose SSL port
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./django_rest_framework/.static_root:/etc/nginx/html/static/  # Mapping static root to nginx # 원하는 경로로 설정 할 수 없어서 오류에서 뱉는 경로에 맞춤
+      - media_volume:/etc/nginx/html/media/    # Mapping media root to nginx # 원하는 경로로 설정 할 수 없어서 오류에서 뱉는 경로에 맞춤
+      - ./nginx/certs:/etc/nginx/certs  # Mount the directory for SSL certificates
+      - ./nginx/web:/var/www/flutter_web/build/web  # Mount the Flutter web build directory
+    env_file:
+      - .env.dev # Use env vars for SSL certificates
+#    command: /bin/bash -c "printenv && envsubst < /etc/nginx/conf.d/domain.configbase > /etc/nginx/conf.d/domain-subst.configbase && \
+#        nginx -g 'daemon off;'"    # Substitute environment variables and run Nginx
+    depends_on:
+      - django_rest_framework_service_taro_server
+    networks:
+      - backend
+      - vault-network
+
+  vault_agent_service_taro_server:
+#    image: vault:1.13.2
+    build:
+      context: ./vault-agent-docker  # Path to the directory containing the Dockerfile
+    container_name: vault_agent_service_taro_server
+    cap_add:
+      - IPC_LOCK  # Adding IPC_LOCK capability to allow memory locking
+    volumes:
+      - ./vault-agent-docker/vault-agent-config:/etc/vault-agent
+      - ./django_rest_framework/project/config:/etc/vault-agent/django_rest_framework/project/config  # This mounts the DRF config directory # ensure tager dir is matched with agent.hcl's template's destination
+      - ./vault-agent-docker/role-id:/etc/vault-agent/role-id  # Mount the role-id file
+      - ./vault-agent-docker/secret-id:/etc/vault-agent/secret-id:rw # Mount the secret-id file # Ensure it's mounted as read-write
+    env_file:
+      - .env.dev  # Specify the env.local file to load
+    command: /bin/sh -c "envsubst < /etc/vault-agent/agent.hcl > /etc/vault-agent/rendered-agent.hcl && \
+      envsubst < /etc/vault-agent/templates/settings.tpl > /etc/vault-agent/templates/settings-rendered.tpl && \
+      vault agent -config=/etc/vault-agent/rendered-agent.hcl"
+    networks:
+      - vault-network
+
+volumes:
+  static_volume:
+  media_volume:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./django_rest_framework/.media_root
+
+networks:
+  backend:
+    driver: bridge
+  vault-network:
+    driver: bridge

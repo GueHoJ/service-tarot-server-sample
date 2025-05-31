@@ -1,0 +1,1 @@
+server_name sample.conai.ai;  # Read domain from environment variable

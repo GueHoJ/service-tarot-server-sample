@@ -1,0 +1,35 @@
+# nginx 가 80 port listen 하고 있다가, django_rest_framework:8000에 연결
+# django_rest_framework upstream 설정
+# upstream django_rest_framework {
+#      server django_rest_framework_service_taro_server:8000;
+# }
+
+server {
+    listen 80;
+
+    server_name localtarot.conai.ai;  # Read domain from environment variable
+
+    location / {
+        return 301 https://$host$request_uri;  # Redirect HTTP to HTTPS
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name localtarot.conai.ai;  # Read domain from environment variable
+
+    ssl_certificate /etc/nginx/certs/star_conai_ai.crt;
+    ssl_certificate_key /etc/nginx/certs/conai_ai_private.key;  # Ensure you have a key file
+    ssl_trusted_certificate /etc/nginx/certs/My_CA_Bundle.ca-bundle;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    location /ws/ {
+        proxy_pass http://django_rest_framework;  # Daphne server
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+    }
+}

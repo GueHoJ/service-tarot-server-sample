@@ -1,0 +1,43 @@
+# nginx 가 80 port listen 하고 있다가, django_rest_framework:8000에 연결
+# django_rest_framework upstream 설정
+upstream django_rest_framework {
+     server django_rest_framework:8000;
+}
+
+server {
+    listen 80;
+
+    server_name sample.conai.ai;  # Read domain from environment variable
+
+    location / {
+        return 301 https://$host$request_uri;  # Redirect HTTP to HTTPS
+    }
+}
+
+# HTTPS 설정 for web.conai.ai
+server {
+    listen 443 ssl;
+    server_name web.conai.ai;
+
+    # SSL 설정 (기존의 인증서 경로와 동일하게 설정)
+    ssl_certificate /etc/nginx/certs/star_conai_ai.crt;
+    ssl_certificate_key /etc/nginx/certs/conai_ai_private.key;
+    ssl_trusted_certificate /etc/nginx/certs/My_CA_Bundle.ca-bundle;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # Flutter 웹 애플리케이션 빌드된 파일 경로
+    root /var/www/flutter_web/build/web;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;  # Flutter의 SPA 처리
+    }
+
+    # 캐시를 위한 설정 (선택 사항)
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+    }
+}

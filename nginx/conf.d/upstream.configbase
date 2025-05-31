@@ -1,0 +1,5 @@
+# nginx/conf.d/upstream.conf
+
+upstream django_rest_framework {
+     server django_rest_framework:8000;
+}

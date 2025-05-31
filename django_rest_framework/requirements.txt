@@ -1,0 +1,93 @@
+amqp==5.2.0
+asgiref==3.8.1
+billiard==4.2.0
+celery==5.4.0
+certifi==2024.7.4
+charset-normalizer==3.3.2
+click==8.1.7
+click-didyoumean==0.3.1
+click-plugins==1.1.1
+click-repl==0.3.0
+Django==4.2
+django-allauth==64.0.0
+django-cors-headers==4.4.0
+django-environ==0.6.0
+django-extensions==3.2.3
+django-filter==24.3
+django-tables2==2.7.0
+django_injector==0.3.1
+djangorestframework==3.15.2
+djangorestframework-filters
+djangorestframework-simplejwt==5.3.1
+djangorestframework-simplejwt[blacklist]
+drf-yasg==1.21.7
+gunicorn==23.0.0
+idna==3.7
+inflection==0.5.1
+injector==0.22.0
+
+packaging==24.1
+prompt_toolkit==3.0.47
+psycopg2-binary==2.9.9
+PyJWT==2.9.0
+python-dateutil==2.9.0.post0
+pytz==2024.1
+PyYAML==6.0.2
+requests==2.31.0
+setuptools==72.1.0
+six==1.16.0
+sqlparse==0.5.1
+tzdata==2024.1
+uritemplate==4.1.1
+# urllib3==2.2.2
+urllib3<2.0.0
+requests-toolbelt==0.10.1
+vine==5.1.0
+wcwidth==0.2.13
+django-prometheus # django prometheus
+wired==0.4 # DI
+watchdog==4.0.2 # watch file changes and trigger actions
+python-keycloak==2.16.1 # keycloak
+django-oauth-toolkit==2.4.0 # oauth2
+# keycloak-django==1.1.13
+# django-keycloak
+django-csp==3.7 # Content Security Policy
+# AI - langchain
+langchain-community
+langchain
+langchain-openai
+langchain-anthropic
+langchain-huggingface
+torch>=1.12.0
+torchvision
+torchaudio
+transformers
+bitsandbytes
+protobuf
+sentencepiece
+safetensors
+accelerate
+# AI - langGraph
+langgraph
+langsmith
+langchain_anthropic
+
+kombu
+redis
+# Llama
+llama-stack
+tiktoken
+
+# log
+concurrent-log-handler
+
+# Llama
+# llama-cpp-python
+
+# Openai chatbot
+channels
+daphne # ASGI server for Websocket in production
+django-debug-toolbar # asgi warning related
+
+# file processing
+django-cleanup
